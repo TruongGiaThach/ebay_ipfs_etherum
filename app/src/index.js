@@ -4,6 +4,12 @@ import "./app.css";
 
 import ecommerceStoreArtifact from "../../build/contracts/EcommerceStore.json";
 
+import { create } from 'ipfs-http-client';
+
+// connect to ipfs daemon API server
+const ipfs = create('http://localhost:5001')
+
+
 
 const App = {
 
@@ -13,11 +19,58 @@ const App = {
 
   instance: null,
 
+  reader: null,
 
   start: async function () {
 
     const { web3 } = this;
+    $("#add-item-to-store").submit(function (event) {
 
+      const req = $("#add-item-to-store").serialize();
+
+      let params = JSON.parse('{"' + req.replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}');
+
+      let decodedParams = {}
+
+      Object.keys(params).forEach(function (v) {
+
+        decodedParams[v] = decodeURIComponent(decodeURI(params[v]));
+
+      });
+
+      App.saveProduct(decodedParams);
+
+      event.preventDefault();
+
+    });
+
+    $("#buy-now").submit(function (event) {
+
+      $("#msg").hide();
+
+      var sendAmount = $("#buy-now-price").val();
+
+      var productId = $("#product-id").val();
+
+      App.instance.methods.buy(productId).send({ value: sendAmount, from: App.account })
+
+      $("#msg").show();
+
+      $("#msg").html("You have successfully purchased the product!");
+
+      event.preventDefault();
+
+    });
+
+    
+    const product_image = document.querySelector("#product-image");
+    if (product_image != null)
+      product_image.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        console.log(file);
+        this.reader = new window.FileReader();
+        this.reader.readAsArrayBuffer(file);
+      });
 
     try {
 
@@ -30,11 +83,7 @@ const App = {
       // get contract instance
 
       const networkId = await web3.eth.net.getId();
-      console.log(networkId);
-      console.log(ecommerceStoreArtifact);
       const deployedNetwork = ecommerceStoreArtifact.networks[networkId];
-
- 
 
       this.instance = new web3.eth.Contract(
 
@@ -45,15 +94,15 @@ const App = {
       );
 
 
-      
-
-
-      this.renderStore();
-
+      if ($("#product-details").length > 0) {
+        let productId = new URLSearchParams(window.location.search).get('id');
+        this.renderProductDetails(productId);
+      } else {
+        this.renderStore();
+      }
 
     } catch (error) {
 
-      
       console.error("Could not connect to contract or chain.");
 
     }
@@ -74,8 +123,6 @@ const App = {
     }
 
   },
-
-
   renderProduct: async function (index) {
 
     const { getProduct } = this.instance.methods;
@@ -86,9 +133,13 @@ const App = {
 
     node.addClass("col-sm-3 text-center col-margin-bottom-1 product");
 
+    node.append("<img src='https://ipfs.io/ipfs/" + f[3] + "'/>");
+
     node.append("<div class='title'>" + f[1] + "</div>");
 
     node.append("<div> Price: " + displayPrice(f[6]) + "</div>");
+
+    node.append("<a href='product.html?id=" + f[0] + "'>Details</div>");
 
     if (f[8] === '0x0000000000000000000000000000000000000000') {
 
@@ -101,8 +152,99 @@ const App = {
     }
 
   },
+  renderProductDetails: async function (productId) {
+
+    const { getProduct } = this.instance.methods;
+
+    var p = await getProduct(productId).call();
+
+    $("#product-name").html(p[1]);
+
+    $("#product-price").html(displayPrice(p[6]));
+
+    $("#buy-now-price").val(p[6]);
+
+    $("#product-id").val(p[0]);
+
+  },
+  saveProduct: async function (product) {
+
+    // 1. Upload image to IPFS and get the hash
+
+    // 2. Add description to IPFS and get the hash
+
+    // 3. Pass the 2 hashes to addProductToStore
 
 
+    const { addProductToStore } = this.instance.methods;
+
+    var imageId = await this.saveImageOnIpfs(this.reader);
+
+    var descId = await this.saveTextBlobOnIpfs(product["product-description"]);
+
+    addProductToStore(product["product-name"], product["product-category"], imageId,
+
+      descId, Date.parse(product["product-start-time"]) / 1000,
+
+      this.web3.utils.toWei(product["product-price"], 'ether'), product["product-condition"]).send({ from: this.account, gas: 4700000 });
+
+  },
+
+
+  saveImageOnIpfs: async function (reader) {
+    console.log(reader);
+    return new Promise(function (resolve, reject) {
+
+
+      const buffer = Buffer.from( reader.result);
+
+
+      ipfs.add(buffer)
+
+        .then((response) => {
+
+          console.log(response.path)
+
+          resolve(response.path);
+
+        }).catch((err) => {
+
+          console.error(err)
+
+          reject(err);
+
+        })
+
+    })
+
+  },
+
+
+  saveTextBlobOnIpfs: async function (blob) {
+
+    return new Promise(function (resolve, reject) {
+
+      const descBuffer = Buffer.from(blob, 'utf-8');
+
+      ipfs.add(descBuffer)
+
+        .then((response) => {
+
+          console.log(response)
+
+          resolve(response.path);
+
+        }).catch((err) => {
+
+          console.error(err)
+
+          reject(err);
+
+        })
+
+    })
+
+  },
 };
 
 
@@ -124,7 +266,7 @@ window.addEventListener("load", function () {
     App.web3 = new Web3(window.ethereum);
 
     window.ethereum.enable(); // get permission to access accounts
-    
+
 
   } else {
 

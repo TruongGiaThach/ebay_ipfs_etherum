@@ -9,13 +9,19 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
   },
   plugins: [
-    new CopyWebpackPlugin([{ from: "./src/app.css", to: "app.css" }, { from: "./src/index.html", to: "index.html" }]),
+    new CopyWebpackPlugin([
+      { from: "./src/app.css", to: "app.css" },
+      { from: "./src/index.html", to: "index.html" },
+      { from: "./src/list-item.html", to: "list-item.html" },
+      { from: "./src/product.html", to: "product.html" },
+
+    ]),
   ],
   module: {
     rules: [
       {
-       test: /\.css$/,
-       use: [ 'style-loader', 'css-loader' ]
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
       }
     ]
   },
