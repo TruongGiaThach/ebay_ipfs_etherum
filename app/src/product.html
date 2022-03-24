@@ -43,16 +43,20 @@
         </div>
 
         <div class="col-sm-12">
-            <h1 class="text-center">Product Details</h1>
+            <h1 class="text-center">Product Details ¯\_(ツ)_/¯</h1>
         </div>
 
         <div class="col-sm-12">
 
             <h2 class="col-sm-6 col-sm-offset-3 text-center">
 
+                <img id="product-image" style="width: 100;" />
+
                 <div id="product-name"></div>
 
                 <div id="product-price"></div>
+
+                <div id="product-desc"></div>
 
             </h2>
 
@@ -77,6 +81,20 @@
                             <button type="submit" class="btn form-submit">Buy</button>
 
                         </form>
+                        <div id="escrow-info">
+                            <div id="buyer"> </div>
+                            <div id="seller"> </div>
+                            <div id="arbiter"> </div>
+                            <div>No. of Participants that have released funds from Escrow: <span
+                                    id="release-count"></span></div>
+
+                            <div>No. of Participants that have refunded funds from Escrow: <span
+                                    id="refund-count"></span></div>
+
+                            <a id="release-funds" class="btn btn-primary form-submit">Release Amount to Seller</a>
+
+                            <a id="refund-funds" class="btn btn-primary form-submit">Refund Amount to Buyer</a>
+                        </div>
 
                     </div>
 

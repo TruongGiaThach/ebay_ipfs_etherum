@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.3;
+pragma solidity >=0.4.21 <0.9.0;
+
+import "./Escrow.sol";
 
 contract EcommerceStore {
     enum ProductCondition {
@@ -30,8 +32,21 @@ contract EcommerceStore {
         address buyer;
     }
 
-    constructor() public {
+    event NewProduct(
+        uint256 _productId,
+        string name,
+        string category,
+        string imageLink,
+        string descLink,
+        uint256 startTime,
+        uint256 price,
+        ProductCondition condition,
+        address buyer
+    );
+
+    constructor(address _arbiter) public {
         productIndex = 0;
+        arbiter = _arbiter;
     }
 
     function addProductToStore(
@@ -60,6 +75,18 @@ contract EcommerceStore {
         stores[msg.sender][productIndex] = product;
 
         productIdInStore[productIndex] = msg.sender;
+
+        emit NewProduct(
+            productIndex,
+            _name,
+            _category,
+            _imageLink,
+            _descLink,
+            _startTime,
+            _price,
+            ProductCondition(_productCondition),
+            address(0)
+        );
     }
 
     function getProduct(uint256 _productId)
@@ -102,5 +129,37 @@ contract EcommerceStore {
         require(msg.value >= product.price);
         product.buyer = msg.sender;
         stores[productIdInStore[_productId]][_productId] = product;
+        Escrow escrow = (new Escrow).value(msg.value)(
+            _productId,
+            msg.sender,
+            productIdInStore[_productId],
+            arbiter
+        );
+        productEscrow[_productId] = address(escrow);
+    }
+
+    function escrowInfo(uint256 _productId)
+        public
+        view
+        returns (
+            address,
+            address,
+            address,
+            bool,
+            uint256,
+            uint256
+        )
+    {
+        return Escrow(productEscrow[_productId]).escrowInfo();
+    }
+
+    function releaseAmountToSeller(uint256 _productId) public {
+        return
+            Escrow(productEscrow[_productId]).releaseAmountToSeller(msg.sender);
+    }
+
+    function refundAmountToBuyer(uint256 _productId) public {
+        return
+            Escrow(productEscrow[_productId]).refundAmountToBuyer(msg.sender);
     }
 }

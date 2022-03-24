@@ -1,4 +1,5 @@
 ## .
+install mongodb follow this link: https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-20-04
 
 download go-ipfs 
 
@@ -18,11 +19,18 @@ download go-ipfs
 
     ganache
 
+check db status 
+
+    sudo systemctl status mongod
+
+
 add new account from ganache into metamask
+add account[9] into 2_deploy_contracts.js
+
 
     truffle migrate
     npm run dev
-
+    npm run start
 
 ## Testnet
 

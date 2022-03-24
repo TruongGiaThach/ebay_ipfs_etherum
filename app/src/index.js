@@ -62,7 +62,35 @@ const App = {
 
     });
 
-    
+    $("#release-funds").click(async function (event) {
+
+      let productId = new URLSearchParams(window.location.search).get('id');
+
+      $("#msg").html("Your transaction has been submitted. Please wait for few seconds for the confirmation").show();
+
+      console.log(productId);
+
+      await App.instance.methods.releaseAmountToSeller(productId).send({ from: App.account, gas: 4700000 })
+
+      location.reload();
+
+    });
+
+    $("#refund-funds").click(async function (event) {
+
+      let productId = new URLSearchParams(window.location.search).get('id');
+
+      $("#msg").html("Your transaction has been submitted. Please wait for few seconds for the confirmation").show();
+
+      console.log(productId);
+
+      await App.instance.methods.refundAmountToBuyer(productId).send({ from: App.account, gas: 4700000 })
+
+      location.reload();
+
+    });
+
+
     const product_image = document.querySelector("#product-image");
     if (product_image != null)
       product_image.addEventListener("change", (event) => {
@@ -155,18 +183,40 @@ const App = {
   renderProductDetails: async function (productId) {
 
     const { getProduct } = this.instance.methods;
-
     var p = await getProduct(productId).call();
-
     $("#product-name").html(p[1]);
-
     $("#product-price").html(displayPrice(p[6]));
-
+    $('#product-image').attr("src", "https://ipfs.io/ipfs/" + p[3]);
     $("#buy-now-price").val(p[6]);
-
     $("#product-id").val(p[0]);
+    this.showDescription(p[4]);
+    if (p[8] == '0x0000000000000000000000000000000000000000') {
+      $("#escrow-info").hide();
+    } else {
+      $("#buy-now").hide();
+    }
+
+    const { escrowInfo } = this.instance.methods;
+    escrowInfo(productId).call().then(function (i) {
+      console.log(i);
+      $('#buyer').html("Buyer: " + i[0]);
+      $('#seller').html("Seller: " + i[1]);
+      $('#arbiter').html("Arbiter: " + i[2]);
+
+      $('#release-count').html(i[4]);
+      $('#refund-count').html(i[5]);
+
+    })
 
   },
+  showDescription: async (hash) => {
+    let contennts = await ipfs.cat(hash);
+    for await (const item of contennts) {
+      $('#product-desc').append("<div>" + new TextDecoder().decode(item).toString() + "</div>");
+    }
+
+  },
+
   saveProduct: async function (product) {
 
     // 1. Upload image to IPFS and get the hash
@@ -196,7 +246,7 @@ const App = {
     return new Promise(function (resolve, reject) {
 
 
-      const buffer = Buffer.from( reader.result);
+      const buffer = Buffer.from(reader.result);
 
 
       ipfs.add(buffer)
