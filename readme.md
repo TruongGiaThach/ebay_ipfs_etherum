@@ -32,6 +32,10 @@ add account[9] into 2_deploy_contracts.js
     npm run dev
     npm run start
 
+go to ./app/src 
+
+    truffle exec seed.js
+    
 ## Testnet
 
     truffle deploy --network ropsten
