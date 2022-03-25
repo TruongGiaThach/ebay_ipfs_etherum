@@ -140,44 +140,56 @@ const App = {
 
   renderStore: async function () {
 
-    const { productIndex } = this.instance.methods;
+    var renderProduct = this.renderProduct;
 
-    var count = await productIndex().call();
+    $.ajax({
 
-    for (var i = 1; i <= count; i++) {
+      url: "http://localhost:3000/products",
 
-      this.renderProduct(i);
+      type: 'get',
 
-    }
+      contentType: 'application/json; charset=utf-8',
+
+      data: {}
+
+    }).done(function (data) {
+
+      console.log(data);
+
+      while (data.length > 0) {
+
+        let chunks = data.splice(0, 4);
+
+        chunks.forEach(function (value) {
+
+          renderProduct(value);
+
+        });
+
+      }
+
+    });
 
   },
-  renderProduct: async function (index) {
 
-    const { getProduct } = this.instance.methods;
 
-    var f = await getProduct(index).call()
+  renderProduct: async function (product) {
+
+    console.log(product);
 
     let node = $("<div/>");
 
     node.addClass("col-sm-3 text-center col-margin-bottom-1 product");
 
-    node.append("<img src='https://ipfs.io/ipfs/" + f[3] + "'/>");
+    node.append("<img src='http://localhost:8080/ipfs/" + product.ipfsImageHash + "' />");
 
-    node.append("<div class='title'>" + f[1] + "</div>");
+    node.append("<div class='title'>" + product.name + "");
 
-    node.append("<div> Price: " + displayPrice(f[6]) + "</div>");
+    node.append("<div> Price: " + displayPrice(product.price.toString()) + "");
 
-    node.append("<a href='product.html?id=" + f[0] + "'>Details</div>");
+    node.append("<a href='product.html?id=" + product.blockchainId + "'>Details");
 
-    if (f[8] === '0x0000000000000000000000000000000000000000') {
-
-      $("#product-list").append(node);
-
-    } else {
-
-      $("#product-purchased").append(node);
-
-    }
+    $("#product-list").append(node);
 
   },
   renderProductDetails: async function (productId) {
@@ -304,8 +316,8 @@ function displayPrice(amt) {
 
 }
 
+const cors = require('cors');
 
-window.App = App;
 
 
 window.addEventListener("load", function () {

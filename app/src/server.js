@@ -49,12 +49,21 @@ app.listen(3000, function () {
 });
 
 
-app.get('/', function (req, res) {
-
-    res.send("Hello, Ethereum!");
-
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
 });
-
+app.get("/products", function (req, res) {
+    var query = {};
+    if (req.query.category !== undefined) {
+        query['category'] = { $eq: req.query.category };
+    }
+    ProductModel.find(query, null, { sort: 'startTime' }, function (err, items) {
+        console.log(items.length);
+        res.send(items);
+    })
+})
 
 function setupProductEventListner(i) {
 
@@ -73,9 +82,9 @@ function saveProduct(product) {
             return;
         }
         var p = new ProductModel({
-            name: product._name, blockchainId: product._productId,
-            category: product._category, ipfsImageHash: product._imageLink, ipfsDescHash: product._descLink,
-            startTime: product._startTime, price: product._price, condition: product._productCondition
+            name: product.name, blockchainId: product._productId,
+            category: product.category, ipfsImageHash: product.imageLink, ipfsDescHash: product.descLink,
+            startTime: product.startTime, price: product.price, condition: product.productCondition
         });
         p.save(function (error) {
             if (error) {
