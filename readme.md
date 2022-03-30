@@ -40,3 +40,7 @@ go to ./app/src
 
     truffle deploy --network ropsten
     npm run dev
+
+## Fix Metamask fail when open existed workspace
+
+open Metamask -> setting -> advance -> reset account

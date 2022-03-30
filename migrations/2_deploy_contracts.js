@@ -1,10 +1,16 @@
 const EcommerceStore = artifacts.require("EcommerceStore");
+//const SafeMath = artifacts.require("SafeMath");
 
+// module.exports = async function(deployer, _network, addresses) {
+//   accounts =  web3.eth.getAccounts();
+//   deployer.deploy(EcommerceStore, "0x8fe2c6C32b94382b9E1689b9DDce41407a5D8e91");
+// };
 module.exports = async function(deployer, _network, addresses) {
-  accounts =  web3.eth.getAccounts();
-  deployer.deploy(EcommerceStore, "0x46C65095E330AE18B5D3FBDbf021310e4026bb3A");
+  // accounts = await web3.eth.getAccounts();
+  //deployer.deploy(SafeMath);
+  const [owner, seller1, seller2, buyer1, buyer2 ,arbiter, _] = addresses; 
+  deployer.deploy(EcommerceStore, arbiter);
 };
-
 // module.exports =  function(deployer, _network, addresses) {
 //   accounts = web3.eth.getAccounts();
 //   setTimeout(function() {

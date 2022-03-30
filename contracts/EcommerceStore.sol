@@ -12,7 +12,7 @@ contract EcommerceStore {
 
     uint256 public productIndex;
 
-    address public arbiter;
+    address payable public arbiter;
 
     mapping(address => mapping(uint256 => Product)) stores;
 
@@ -44,7 +44,25 @@ contract EcommerceStore {
         address buyer
     );
 
-    constructor(address _arbiter) public {
+    event BuyProduct(
+        uint256 _productId,
+        string name,
+        string category,
+        string imageLink,
+        string descLink,
+        uint256 startTime,
+        uint256 price,
+        ProductCondition condition,
+        address buyer
+    );
+
+    event ResetBuyer(
+        uint256 _productId,
+        address _oldBuyer,
+        address _currentBuyer
+    );
+
+    constructor(address payable _arbiter) public {
         productIndex = 0;
         arbiter = _arbiter;
     }
@@ -75,6 +93,8 @@ contract EcommerceStore {
         stores[msg.sender][productIndex] = product;
 
         productIdInStore[productIndex] = msg.sender;
+
+        productEscrow[productIndex] = address(0);
 
         emit NewProduct(
             productIndex,
@@ -129,13 +149,27 @@ contract EcommerceStore {
         require(msg.value >= product.price);
         product.buyer = msg.sender;
         stores[productIdInStore[_productId]][_productId] = product;
-        Escrow escrow = (new Escrow).value(msg.value)(
+        if (productEscrow[product.id] == address(0)) {
+            Escrow escrow = (new Escrow).value(msg.value)(
+                _productId,
+                msg.sender,
+                productIdInStore[_productId],
+                arbiter
+            );
+            productEscrow[_productId] = address(escrow);
+        }
+
+        emit BuyProduct(
             _productId,
-            msg.sender,
-            productIdInStore[_productId],
-            arbiter
+            product.name,
+            product.category,
+            product.imageLink,
+            product.descLink,
+            product.startTime,
+            product.price,
+            product.condition,
+            product.buyer
         );
-        productEscrow[_productId] = address(escrow);
     }
 
     function escrowInfo(uint256 _productId)
@@ -161,5 +195,14 @@ contract EcommerceStore {
     function refundAmountToBuyer(uint256 _productId) public {
         return
             Escrow(productEscrow[_productId]).refundAmountToBuyer(msg.sender);
+    }
+
+    function resetBuyer(uint256 _productId) public {
+        require(msg.sender == productEscrow[_productId]);
+        Product memory product = stores[msg.sender][_productId];
+        address _oldBuyer = product.buyer;
+        product.buyer = address(0);
+        stores[msg.sender][_productId] = product;
+        emit ResetBuyer(_productId, _oldBuyer, product.buyer);
     }
 }

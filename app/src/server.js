@@ -72,6 +72,18 @@ function setupProductEventListner(i) {
         console.log(event.returnValues);
         saveProduct(event.returnValues);
     })
+    i.events.BuyProduct({ fromBlock: 0 }, (error, event) => {
+
+        console.log(event.returnValues);
+        buyProduct(event.returnValues);
+    })
+    i.events.ResetBuyer({ fromBlock: 0 }, (error, event) => {
+
+        console.log(event.returnValues);
+        resetBuyer(event.returnValues);
+    })
+
+    
 
 }
 function saveProduct(product) {
@@ -84,7 +96,7 @@ function saveProduct(product) {
         var p = new ProductModel({
             name: product.name, blockchainId: product._productId,
             category: product.category, ipfsImageHash: product.imageLink, ipfsDescHash: product.descLink,
-            startTime: product.startTime, price: product.price, condition: product.productCondition
+            startTime: product.startTime, price: product.price, condition: product.productCondition, buyer: product.buyer
         });
         p.save(function (error) {
             if (error) {
@@ -96,5 +108,25 @@ function saveProduct(product) {
             };
 
         })
+    })
+}
+function buyProduct(product) {
+    ProductModel.updateOne({
+        'blockchainId': product._productId.toLocaleString()
+    },
+    { buyer: product.buyer }
+    , function (err, dbProduct) {
+        if (err) throw err;
+        console.log(dbProduct);
+    })
+}
+function resetBuyer(param) {
+    ProductModel.updateOne({
+        'blockchainId': param._productId.toLocaleString()
+    },
+    { buyer: param._currentBuyer }
+    , function (err, param) {
+        if (err) throw err;
+        console.log(param);
     })
 }

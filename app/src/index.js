@@ -90,7 +90,6 @@ const App = {
 
     });
 
-
     const product_image = document.querySelector("#product-image");
     if (product_image != null)
       product_image.addEventListener("change", (event) => {
@@ -126,22 +125,28 @@ const App = {
         let productId = new URLSearchParams(window.location.search).get('id');
         this.renderProductDetails(productId);
       } else {
-        this.renderStore();
+        this.renderStore("all");
+        this.showCate();
       }
+      
 
     } catch (error) {
 
       console.error("Could not connect to contract or chain.");
 
     }
-
+    
   },
 
 
-  renderStore: async function () {
+  renderStore: async function (_category) {
 
     var renderProduct = this.renderProduct;
-
+    $("#product-list").html('<div class="row" id="product-list">');
+    $("#product-purchased").html('<div class="row" id="product-purchased">');
+    var param = jQuery.param({category: _category.toString() });
+    if (_category == "all")
+      param = null;
     $.ajax({
 
       url: "http://localhost:3000/products",
@@ -150,7 +155,7 @@ const App = {
 
       contentType: 'application/json; charset=utf-8',
 
-      data: {}
+      data: param,
 
     }).done(function (data) {
 
@@ -172,7 +177,13 @@ const App = {
 
   },
 
+  showCate: async function (){
 
+    $('.category-link').click( (event) => {
+      console.log(event.target.title);
+      this.renderStore(event.target.title)
+    });
+  },
   renderProduct: async function (product) {
 
     console.log(product);
@@ -181,7 +192,7 @@ const App = {
 
     node.addClass("col-sm-3 text-center col-margin-bottom-1 product");
 
-    node.append("<img src='http://localhost:8080/ipfs/" + product.ipfsImageHash + "' />");
+    node.append("<img width='200' height='200' src='https://ipfs.io/ipfs/" + product.ipfsImageHash + "' />");
 
     node.append("<div class='title'>" + product.name + "");
 
@@ -189,7 +200,15 @@ const App = {
 
     node.append("<a href='product.html?id=" + product.blockchainId + "'>Details");
 
-    $("#product-list").append(node);
+    if (product.buyer === "0x0000000000000000000000000000000000000000") {
+
+      $("#product-list").append(node);
+
+    } else {
+
+      $("#product-purchased").append(node);
+
+    }
 
   },
   renderProductDetails: async function (productId) {
@@ -204,21 +223,23 @@ const App = {
     this.showDescription(p[4]);
     if (p[8] == '0x0000000000000000000000000000000000000000') {
       $("#escrow-info").hide();
+
     } else {
       $("#buy-now").hide();
+      const { escrowInfo } = this.instance.methods;
+      escrowInfo(productId).call().then(function (i) {
+        console.log(i);
+        $('#buyer').html("Buyer: " + i[0]);
+        $('#seller').html("Seller: " + i[1]);
+        $('#arbiter').html("Arbiter: " + i[2]);
+
+        $('#release-count').html(i[4]);
+        $('#refund-count').html(i[5]);
+
+      })
     }
 
-    const { escrowInfo } = this.instance.methods;
-    escrowInfo(productId).call().then(function (i) {
-      console.log(i);
-      $('#buyer').html("Buyer: " + i[0]);
-      $('#seller').html("Seller: " + i[1]);
-      $('#arbiter').html("Arbiter: " + i[2]);
 
-      $('#release-count').html(i[4]);
-      $('#refund-count').html(i[5]);
-
-    })
 
   },
   showDescription: async (hash) => {
@@ -243,6 +264,12 @@ const App = {
     var imageId = await this.saveImageOnIpfs(this.reader);
 
     var descId = await this.saveTextBlobOnIpfs(product["product-description"]);
+
+    console.log(product["product-name"], product["product-category"], imageId,
+
+      descId, Date.parse(product["product-start-time"]) / 1000,
+
+      this.web3.utils.toWei(product["product-price"], 'ether'), product["product-condition"]);
 
     addProductToStore(product["product-name"], product["product-category"], imageId,
 

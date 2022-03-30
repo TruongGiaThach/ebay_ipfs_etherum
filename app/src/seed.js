@@ -21,13 +21,11 @@ module.exports = function (callback) {
 
     EcommerceStore.deployed().then(function (i) { i.addProductToStore('Shirt', 'Clothing', 'QmYu8YbSkqFgycoeYqzvovjhvwpGSnsZxyetTmqFJbovKN', 'QmdhqKBVSF7tSMA4ZU1cfRxbgdfUZ5axpbMCKyszJiLvYG', current_time, amt_tenth, 0).then(function (f) { console.log(f) }) });
 
-    EcommerceStore.deployed().then(function (i) { i.addProductToStore("Women's Jacket", 'Clothing', 'QmUaeEtNH4ErMYAUH3hMnKZCWHKhz9UdixqBBah5rMBXR8', 'QmSfWh8FHpGSVSuubxXw1d4gZEdf5UHc2qjax8D6FyKi8Z', current_time, amt_half, 0).then(function (f) { console.log(f) }) });
+    EcommerceStore.deployed().then(function (i) { i.addProductToStore("Women's Jacket", 'Clothing', 'QmW7Wo3Db9L9m4CnQ1pgTQtGJ5mWU2T2cwVkSQ5Vc62vUN', 'QmSfWh8FHpGSVSuubxXw1d4gZEdf5UHc2qjax8D6FyKi8Z', current_time, amt_half, 0).then(function (f) { console.log(f) }) });
 
     EcommerceStore.deployed().then(function (i) { i.addProductToStore("Hydra Laptop", 'Computers & Tablets', 'QmbSeRtGrmeTZ3jhs8NNqWUNZTBEgo9GYHjMxpbd1S4x9c', 'QmdowsgFNRaXttG8WDq2FA4yiSwfK9wA9ezPNpkTkikiYK', current_time, amt_2, 0).then(function (f) { console.log(f) }) });
 
-    EcommerceStore.deployed().then(function (i) { i.addProductToStore("iPad", 'Computers & Tablets', 'QmX5wPjtgZDCZKuHCNspeqxHsmi5Tb4qTdK858hC8GewQV', 'QmQKrJYWnJKjLHXzc6bJRNE8ja4RDxMmxJTwuptSLUAogG', current_time, amt_2, 0).then(function (f) { console.log(f) }) });
-
-    EcommerceStore.deployed().then(function (i) { i.addProductToStore("Macbook Pro", 'Computers & Tablets', 'QmWFZ3DBTet3UqptBfif1FPzgvSbaPBRB941cdiyCgsnuy', 'QmRYuTdmJCUqdCTBopXVCggfSPYwNXABT6KvcCGSmmStcj', current_time, amt_2, 0).then(function (f) { console.log(f) }) });
+   
 
     EcommerceStore.deployed().then(function (i) { i.addProductToStore("Drone", 'Cameras', 'QmaWR99orw8oE5N64SK7iF1pKQtP33xFdULgmZgq2qQAGZ', 'QmVjm69AhhdC2D8gZFXUjpJhaqewYMdbciGdbXtoJ11KCS', current_time, amt_2, 0).then(function (f) { console.log(f) }) });
 
