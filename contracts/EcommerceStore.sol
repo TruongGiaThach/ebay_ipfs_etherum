@@ -12,13 +12,23 @@ contract EcommerceStore {
 
     uint256 public productIndex;
 
-    address payable public arbiter;
+    uint256 public numberOfArbiter;
+
+    mapping(uint256 => Arbiter) public arbiters; // 1-> active , 2->banned
+    mapping(address => uint256) public arbitersId;
 
     mapping(address => mapping(uint256 => Product)) stores;
 
     mapping(uint256 => address payable) productIdInStore;
 
     mapping(uint256 => address) productEscrow;
+
+    uint256 public registFee = 5 ether;
+
+    struct Arbiter {
+        address payable _address;
+        uint256 _state;
+    }
 
     struct Product {
         uint256 id;
@@ -62,9 +72,24 @@ contract EcommerceStore {
         address _currentBuyer
     );
 
+    event ArbiterRegistration(
+        address _arbiter,
+        uint256 _value,
+        uint256 _arbiterId
+    );
+
+    event ArbiterWithdraw(
+        address _arbiter,
+        uint256 _value,
+        uint256 _currentstate
+    );
+
     constructor(address payable _arbiter) public {
         productIndex = 0;
-        arbiter = _arbiter;
+        numberOfArbiter = 1;
+        Arbiter memory _tmp = Arbiter(_arbiter, 1);
+        arbiters[numberOfArbiter] = _tmp;
+        arbitersId[_arbiter] = numberOfArbiter;
     }
 
     function addProductToStore(
@@ -141,6 +166,15 @@ contract EcommerceStore {
         );
     }
 
+    //random _min <= x < _max
+    function random(uint256 _min, uint256 _max) public view returns (uint256) {
+        uint256 randomnumber = uint256(
+            keccak256(abi.encodePacked(now, msg.sender))
+        ) % (_max - _min);
+        randomnumber = randomnumber + _min;
+        return randomnumber;
+    }
+
     function buy(uint256 _productId) public payable {
         Product memory product = stores[productIdInStore[_productId]][
             _productId
@@ -150,11 +184,12 @@ contract EcommerceStore {
         product.buyer = msg.sender;
         stores[productIdInStore[_productId]][_productId] = product;
         if (productEscrow[product.id] == address(0)) {
+            uint256 _randomNum = random(0, numberOfArbiter) + 1;
             Escrow escrow = (new Escrow).value(msg.value)(
                 _productId,
                 msg.sender,
                 productIdInStore[_productId],
-                arbiter
+                arbiters[_randomNum]._address
             );
             productEscrow[_productId] = address(escrow);
         }
@@ -181,6 +216,7 @@ contract EcommerceStore {
             address,
             bool,
             uint256,
+            uint256,
             uint256
         )
     {
@@ -204,5 +240,50 @@ contract EcommerceStore {
         product.buyer = address(0);
         stores[msg.sender][_productId] = product;
         emit ResetBuyer(_productId, _oldBuyer, product.buyer);
+    }
+
+    function arbiterRegistration() public payable {
+        require(arbitersId[msg.sender] == 0, "Existed arbiter"); // check unexisted arbiter
+        require(msg.value == registFee, "Not enough fee");
+
+        Arbiter memory _arbiter = Arbiter(msg.sender, 1);
+        numberOfArbiter++;
+        arbitersId[msg.sender] = numberOfArbiter;
+        arbiters[numberOfArbiter] = _arbiter;
+        emit ArbiterRegistration(msg.sender, registFee, numberOfArbiter);
+    }
+
+    function arbiterWithdraw() public payable {
+        require(arbitersId[msg.sender] != 0, "Unexisted arbiter"); // check existed arbiter
+        require(arbiters[arbitersId[msg.sender]]._state == 1, "Banned arbiter");
+        (msg.sender).transfer(registFee);
+        arbiters[arbitersId[msg.sender]]._state = 2;
+        emit ArbiterWithdraw(
+            msg.sender,
+            registFee,
+            arbiters[arbitersId[msg.sender]]._state
+        );
+    }
+
+    function reportArbiter(uint256 _productId) public {
+        return Escrow(productEscrow[_productId]).reportArbiter(msg.sender);
+    }
+
+    event ArbiterBanned(address _arbiter);
+
+    function requestBanArbiter(address payable _arbiter, uint256 _productId)
+        public
+    {
+        require(msg.sender == productEscrow[_productId]);
+        Arbiter memory tmp = arbiters[arbitersId[_arbiter]];
+        tmp._state = 2;
+        arbiters[arbitersId[_arbiter]] = tmp;
+        productEscrow[_productId] = address(0);
+        Product memory product = stores[productIdInStore[_productId]][
+            _productId
+        ];
+        product.buyer = address(0);
+        stores[productIdInStore[_productId]][_productId] = product;
+        emit ArbiterBanned(_arbiter);
     }
 }

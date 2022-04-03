@@ -89,6 +89,31 @@ const App = {
       location.reload();
 
     });
+    $("#regist-arbiter").click(async function (event) {
+      $("#msg").hide();
+      App.instance.methods.arbiterRegistration().send(
+        { value: App.web3.utils.toWei("5", 'ether'), from: App.account })
+        .then(function (i) {
+          console.log(i);
+        });
+      $("#msg").show();
+
+      $("#msg").html("You have successfully registration!");
+
+      event.preventDefault();
+    });
+    $("#arbiter-withdraw").click(async function (event) {
+      $("#msg").hide();
+      App.instance.methods.reportArbiter().send(
+        { from: App.account, gas: 4700000 })
+        .then(function (i) {
+          console.log(i);
+        });
+      $("#msg").show();
+
+      event.preventDefault();
+    });
+
 
     const product_image = document.querySelector("#product-image");
     if (product_image != null)
@@ -128,23 +153,45 @@ const App = {
         this.renderStore("all");
         this.showCate();
       }
-      
+      $("#report-arbiter").click(async function (event) {
+        $("#msg").hide();
+        let productId = new URLSearchParams(window.location.search).get('id');
+        App.instance.methods.reportArbiter(productId).send(
+          { from: App.account, gas: 4700000 })
+          .then(function (i) {
+            console.log(i);
+          });
+        $("#msg").show();
+
+        $("#msg").html("You have successfully withdraw!");
+
+        event.preventDefault();
+      });
+
+
+
 
     } catch (error) {
 
       console.error("Could not connect to contract or chain.");
 
     }
-    
+
   },
 
+  registArbiter: async function () {
+    const { arbiterRegistration } = this.instance.methods;
+    arbiterRegistration().send({ value: this.web3.utils.toWei(5, 'ether'), from: this.account, gas: 4700000 }).then(function (i) {
+      console.log(i);
+    });
+  },
 
   renderStore: async function (_category) {
 
     var renderProduct = this.renderProduct;
     $("#product-list").html('<div class="row" id="product-list">');
     $("#product-purchased").html('<div class="row" id="product-purchased">');
-    var param = jQuery.param({category: _category.toString() });
+    var param = jQuery.param({ category: _category.toString() });
     if (_category == "all")
       param = null;
     $.ajax({
@@ -177,9 +224,9 @@ const App = {
 
   },
 
-  showCate: async function (){
+  showCate: async function () {
 
-    $('.category-link').click( (event) => {
+    $('.category-link').click((event) => {
       console.log(event.target.title);
       this.renderStore(event.target.title)
     });
@@ -232,6 +279,7 @@ const App = {
         $('#buyer').html("Buyer: " + i[0]);
         $('#seller').html("Seller: " + i[1]);
         $('#arbiter').html("Arbiter: " + i[2]);
+        $('#report-count').html("Report: " + i[6]);
 
         $('#release-count').html(i[4]);
         $('#refund-count').html(i[5]);

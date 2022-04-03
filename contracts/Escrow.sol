@@ -16,6 +16,8 @@ contract Escrow {
     uint256 public refundCound;
     bool public fundsDisbursed;
     address public owner;
+    uint256 public numberOfReport;
+    mapping(address => bool) reporters;
 
     constructor(
         uint256 _productId,
@@ -52,6 +54,7 @@ contract Escrow {
             address,
             bool,
             uint256,
+            uint256,
             uint256
         )
     {
@@ -61,7 +64,8 @@ contract Escrow {
             arbiter,
             fundsDisbursed,
             releaseCount,
-            refundCound
+            refundCound,
+            numberOfReport
         );
     }
 
@@ -76,7 +80,7 @@ contract Escrow {
             releaseCount += 1;
         }
         if (releaseCount == 2) {
-            uint _serviceFee = this.onePercent(amount);
+            uint256 _serviceFee = this.onePercent(amount);
             arbiter.transfer(_serviceFee);
             amount = amount - _serviceFee;
             seller.transfer(amount);
@@ -115,5 +119,22 @@ contract Escrow {
         refundCound = 0;
 
         fundsDisbursed = false;
+    }
+
+    function reportArbiter(address caller) public {
+        require(msg.sender == owner);
+        require(fundsDisbursed); //require successful trading
+        if (
+            (caller == buyer || caller == seller) && reporters[caller] != true
+        ) {
+            reporters[caller] = true;
+            numberOfReport += 1;
+        }
+        if (numberOfReport == 2) {
+            EcommerceStore(address(owner)).requestBanArbiter(
+                arbiter,
+                productId
+            );
+        }
     }
 }
