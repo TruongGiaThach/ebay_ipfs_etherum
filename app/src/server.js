@@ -87,6 +87,8 @@ function setupProductEventListner(i) {
 
 }
 function saveProduct(product) {
+    if (product == null)
+        return;
     ProductModel.findOne({
         'blockchainId': product._productId.toLocaleString()
     }, function (err, dbProduct) {
