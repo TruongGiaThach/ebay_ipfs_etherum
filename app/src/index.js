@@ -161,7 +161,9 @@ const App = {
 
     node.addClass("col-sm-3 text-center col-margin-bottom-1 product");
 
-    node.append("<img src='https://ipfs.io/ipfs/" + f[3] + "'/>");
+    // node.append("<img src='https://ipfs.io/ipfs/" + f[3] + "'/>");
+    node.append("<img src='http://localhost:8080/ipfs/" + f[3] + "'/>");
+
 
     node.append("<div class='title'>" + f[1] + "</div>");
 
@@ -186,7 +188,9 @@ const App = {
     var p = await getProduct(productId).call();
     $("#product-name").html(p[1]);
     $("#product-price").html(displayPrice(p[6]));
-    $('#product-image').attr("src", "https://ipfs.io/ipfs/" + p[3]);
+    // $('#product-image').attr("src", "https://ipfs.io/ipfs/" + p[3]);
+    $('#product-image').attr("src", "http://localhost:8080/ipfs/" + p[3]);
+
     $("#buy-now-price").val(p[6]);
     $("#product-id").val(p[0]);
     this.showDescription(p[4]);

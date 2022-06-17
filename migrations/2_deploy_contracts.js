@@ -2,7 +2,7 @@ const EcommerceStore = artifacts.require("EcommerceStore");
 
 module.exports = async function(deployer, _network, addresses) {
   accounts =  web3.eth.getAccounts();
-  deployer.deploy(EcommerceStore, "0x6B3f6836bD4491A4A7b0881199712fb812c83d8f");
+  deployer.deploy(EcommerceStore, "0x26E55426661bd9Ab7008CB1Df017FE6D841F0de7");
 };
 // module.exports =  function(deployer, _network, addresses) {
 //   accounts = web3.eth.getAccounts();
